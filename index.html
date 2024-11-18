@@ -26,8 +26,8 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <!-- Our Scripts -->
-    <script type="module" src="Carousel.js"></script>
-    <script type="module" src="index.js"></script>
+    <script defer type="module" src="Carousel.js"></script>
+    <script defer type="module" src="index.js"></script>
   </head>
 
   <body>
@@ -76,11 +76,9 @@
     </div>
 
     <!-- Information Section -->
-    <div
-      id="infoDump"
-      class="px-5 py-3 mx-auto"
-      style="max-width: 1600px"
-    ></div>
+    <div id="infoDump" class="px-5 py-3 mx-auto" style="max-width: 1600px">
+      <table></table>
+    </div>
 
     <!-- Carousel Item Template -->
     <template id="carouselItemTemplate">

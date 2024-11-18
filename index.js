@@ -11,7 +11,8 @@ const progressBar = document.getElementById("progressBar");
 const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 
 // Step 0: Store your API key here for reference and easy access.
-const API_KEY = "";
+const API_KEY =
+  "live_w6dfjsxV3oMlVBcL3scQZ22IjWkxbDl5CkV2yCb6KOa9eQeKwId6jguGWODQQahI";
 
 /**
  * 1. Create an async function "initialLoad" that does the following:
@@ -22,20 +23,33 @@ const API_KEY = "";
  * This function should execute immediately.
  */
 async function initialLoad() {
-  const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
-  const breedsJson = await breeds.json();
+  let id;
+  try {
+    const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
+    const breedsJson = await breeds.json();
+    id = breedsJson[0].id;
 
-  breedsJson.forEach((breed) => {
-    // create an option element and set the info
-    const optionEl = document.createElement("option");
-    optionEl.value = breed.id;
-    optionEl.innerText = breed.name;
+    breedsJson.forEach((breed) => {
+      // create an option element and set the info
+      const optionEl = document.createElement("option");
+      optionEl.value = breed.id;
+      optionEl.innerText = breed.name;
 
-    breedSelect.appendChild(optionEl);
-  });
-  displayBreedDataFromId(breedsJson[0].id);
+      breedSelect.appendChild(optionEl);
+    });
+
+    displayBreedData(fetchBreedById(breedsJson[0].id));
+  } catch (error) {
+    console.log("Error loading breeds");
+  } finally {
+  }
 }
-initialLoad();
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(() => {
+    initialLoad();
+  }, 100);
+});
 
 /**
  * 2. Create an event handler for breedSelect that does the following:
@@ -52,41 +66,64 @@ initialLoad();
  * - Add a call to this function to the end of your initialLoad function above to create the initial carousel.
  */
 breedSelect.addEventListener("input", (e) =>
-  displayBreedDataFromId(e.target.value)
+  displayBreedData(fetchBreedById(e.target.value))
 );
 
-async function displayBreedDataFromId(id) {
-  try {
-    console.log(id); // check id
+async function fetchImageDataById(id) {
+  const img = await fetch(id);
+  const imgJson = await img.json();
+  return imgJson;
+}
 
-    const breed = await fetch(
-      `https://api.thecatapi.com/v1/images/search?breed_ids=${id}`
-    );
-    const breedJson = await breed.json();
+async function fetchBreedById(id) {
+  const breed = await fetch(
+    `https://api.thecatapi.com/v1/images/search?breed_ids=${id}`
+  );
+  const breedJson = await breed.json();
+  return breedJson;
+}
 
-    console.log(breedJson); // check returned breed promise object
+function displayBreedData(breedPromise) {
+  breedPromise
+    .then((breedData) => {
+      // success
 
-    // clear and restart carousel
-    Carousel.clear();
-    Carousel.start();
-
-    // for each object in array, call Carousel file's createCarouselItem function to create a new item.
-    breedJson.forEach((obj) => {
-      const newEl = Carousel.createCarouselItem(obj.url, "", obj.id);
-      // append to carousel
-      Carousel.appendCarousel(newEl);
+      // clear and restart carousel
+      Carousel.clear();
+      Carousel.start();
+      // for each object in array, call Carousel file's createCarouselItem function to create a new item.
+      breedData.forEach((obj) => {
+        const newEl = Carousel.createCarouselItem(obj.url, "", obj.id);
+        const imgId = obj.url.slice(
+          obj.url.lastIndexOf("/") + 1,
+          obj.url.lastIndexOf(".")
+        );
+        const imgFetchUrl = `https://api.thecatapi.com/v1/images/${imgId}`;
+        displayInformationSection(fetchImageDataById(imgFetchUrl));
+        // append to carousel
+        Carousel.appendCarousel(newEl);
+      });
+    })
+    .catch((error) => {
+      console.log("Error:", error);
     });
+}
 
-    /*
-Use the other data you have been given to create an informational section within the infoDump element.
-Be creative with how you create DOM elements and HTML.
-Feel free to edit index.html and styles.css to suit your needs.
-Remember that functionality comes first, but user experience and design are also important.
-Each new selection should clear, re-populate, and restart the carousel.
-*/
-  } catch (error) {
-    console.log("Error fetching breed.");
-  }
+function displayInformationSection(imgPromise) {
+  imgPromise
+    .then((imgData) => {
+      // success
+      Object.entries(imgData.breeds[0]).forEach(([key, value]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<th>${key}</th>
+        <td>${value}</td>`;
+
+        infoDump.querySelector("table").append(tr);
+      });
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
 }
 
 /**
