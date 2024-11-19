@@ -57,7 +57,7 @@ async function fetchImageDataById(id) {
 
 async function fetchBreedById(id) {
   const breed = await fetch(
-    `https://api.thecatapi.com/v1/images/search?breed_ids=${id}`
+    `https://api.thecatapi.com/v1/images/search?limit=100&breed_ids=${id}&api_key=${API_KEY}`
   );
   const breedJson = await breed.json();
   return breedJson;
@@ -67,31 +67,35 @@ function displayBreedData(breedPromise) {
   breedPromise
     .then((breedData) => {
       // success
-
+      console.log(breedData);
       // clear and restart carousel
       Carousel.clear();
       Carousel.start();
       // for each object in array, call Carousel file's createCarouselItem function to create a new item.
       breedData.forEach((obj) => {
         const newEl = Carousel.createCarouselItem(obj.url, "", obj.id);
-        const imgId = obj.url.slice(
-          obj.url.lastIndexOf("/") + 1,
-          obj.url.lastIndexOf(".")
-        );
-        const imgFetchUrl = `https://api.thecatapi.com/v1/images/${imgId}`;
-        displayInformationSection(fetchImageDataById(imgFetchUrl));
         // append to carousel
         Carousel.appendCarousel(newEl);
       });
+
+      // get breed image id and info
+      const imgId = breedData[0].url.slice(
+        breedData[0].url.lastIndexOf("/") + 1,
+        breedData[0].url.lastIndexOf(".")
+      );
+      const imgFetchUrl = `https://api.thecatapi.com/v1/images/${imgId}`;
+      displayInformationSection(fetchImageDataById(imgFetchUrl));
     })
     .catch((error) => {
-      console.log("Error:", error);
+      infoDump.querySelector("table").innerHTML =
+        "<tr><th>No Data Found.</th></tr>";
     });
 }
 
 function displayInformationSection(imgPromise) {
   imgPromise
     .then((imgData) => {
+      infoDump.querySelector("table").innerHTML = "";
       // success
       Object.entries(imgData.breeds[0]).forEach(([key, value]) => {
         if (key == "name" || key == "origin" || key == "description") {
@@ -107,35 +111,7 @@ function displayInformationSection(imgPromise) {
       console.log("Error:", error);
     });
 }
-/*
- * 8. To practice posting data, we'll create a system to "favourite" certain images.
- * - The skeleton of this function has already been created for you.
- * - This function is used within Carousel.js to add the event listener as items are created.
- *  - This is why we use the export keyword for this function.
- * - Post to the cat API's favourites endpoint with the given ID.
- * - The API documentation gives examples of this functionality using fetch(); use Axios!
- * - Add additional logic to this function such that if the image is already favourited,
- *   you delete that favourite using the API, giving this function "toggle" functionality.
- * - You can call this function by clicking on the heart at the top right of any image.
- */
+
 export async function favourite(imgId) {
   // your code here
 }
-
-/**
- * 9. Test your favourite() function by creating a getFavourites() function.
- * - Use Axios to get all of your favourites from the cat API.
- * - Clear the carousel and display your favourites when the button is clicked.
- *  - You will have to bind this event listener to getFavouritesBtn yourself.
- *  - Hint: you already have all of the logic built for building a carousel.
- *    If that isn't in its own function, maybe it should be so you don't have to
- *    repeat yourself in this section.
- */
-
-/**
- * 10. Test your site, thoroughly!
- * - What happens when you try to load the Malayan breed?
- *  - If this is working, good job! If not, look for the reason why and fix it!
- * - Test other breeds as well. Not every breed has the same data available, so
- *   your code should account for this.
- */
